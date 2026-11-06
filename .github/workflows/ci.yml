@@ -34,6 +34,9 @@ jobs:
         if: ${{ !cancelled() }}
         working-directory: ${{ runner.temp }}
         run: python -m bms_hil --output "${{ github.workspace }}/reports"
+      - name: Run high-voltage acceptance checks
+        working-directory: ${{ runner.temp }}
+        run: python -m bms_hil.high_voltage
       - name: Upload verdicts and traces
         if: always()
         uses: actions/upload-artifact@v4
