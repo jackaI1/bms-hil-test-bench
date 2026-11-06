@@ -72,10 +72,13 @@ class Scenario:
             or self.duration_ms % STEP_MS
         ):
             raise ValueError("duration must be a 10 ms multiple, 300 ms after injection, <=60000")
-        if self.value is not None and (
-            type(self.value) not in (int, float) or not isfinite(self.value)
-        ):
-            raise ValueError("value must be a finite number")
+        if self.value is not None:
+            try:
+                finite = type(self.value) in (int, float) and isfinite(self.value)
+            except OverflowError:
+                finite = False
+            if not finite:
+                raise ValueError("value must be a finite number within float range")
         value = self.magnitude
         if self.kind in ("overvoltage", "undervoltage", "imbalance") and not 0 <= value <= 6:
             raise ValueError("injected voltage must fit 0 to 6 V sensor range")

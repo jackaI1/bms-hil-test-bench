@@ -125,7 +125,8 @@ class Controller:
                 (Fault.OVERCURRENT, abs(current) > limits.overcurrent_a, limits.current_dwell_ms),
                 (
                     Fault.IMBALANCE,
-                    max(voltages) - min(voltages) > limits.imbalance_v,
+                    round(max(voltages) * 1000) - round(min(voltages) * 1000)
+                    > limits.imbalance_v * 1000,
                     limits.imbalance_dwell_ms,
                 ),
             )

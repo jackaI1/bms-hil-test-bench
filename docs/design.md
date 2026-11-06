@@ -32,7 +32,7 @@ The contactor makes applied current zero when open. Polarization relaxes and coo
 | `0x200` | `int32 current, uint8 sequence, 3 pad bytes` | mA; positive is discharge |
 | `0x300` | `uint8 closed, uint8 fault_mask, 6 pad bytes` | closed is 0 or 1 |
 
-Fault mask bits: overvoltage 1, undervoltage 2, overtemperature 4, overcurrent 8, imbalance 16, sensor 32. Multiple protections may latch. A closed command carrying a fault mask is invalid.
+Fault mask bits: overvoltage 1, undervoltage 2, overtemperature 4, overcurrent 8, imbalance 16, sensor 32. Multiple protections may latch. A closed command carrying a fault mask is invalid. The synthetic voltage sensor clips plant voltage to its 0 to 6 V rails before encoding. Extreme current can push plant truth outside those rails; the oracle retains the unclipped truth while the controller receives the saturated sensor reading.
 
 Each channel owns its own last-good timestamp and sequence. An advance of 1 to 127 modulo 256 is fresh; duplicate or backwards counters do not refresh the timestamp. Wrap from 255 to 0 works. Eight-byte length and plausible ranges (0 to 6 V, -80 to 200 °C, 0 to 100% SOC, +/-1000 A) are checked. Unknown IDs are ignored. A malformed known channel trips the sensor protection immediately. Plausible but incorrect values remain a limitation of this simple protocol.
 
@@ -50,7 +50,7 @@ The counter assumes frequent updates: a stream silent for half the counter range
 
 The controller starts open. Complete, fresh telemetry must permit closure by 100 ms before fault injection (at least 150 ms). All threshold comparisons are strict. Continuous hold timers reset when a condition clears. Sensor freshness is checked separately for every channel, even when all other sensors keep updating.
 
-`requirements.py` owns the acceptance specification and imports no controller configuration. The oracle timestamps the first actual threshold crossing, then the first applied contactor opening. It requires the correct fault bit at that opening, a nonnegative latency within the requirement, and no later reclosing. A pre-fault opening, missing crossing, wrong reason, or failure to close at startup fails the scenario. This catches an always-open controller and prevents unrelated protections from hiding a broken one.
+`requirements.py` owns the acceptance specification and imports no controller configuration. The oracle timestamps the first actual threshold crossing, then the first applied contactor opening. For electrical and thermal protections, it also requires the specified hold time plus both fixed message delays before opening. The controller compares imbalance in integer millivolts; the oracle uses plant values with a 1e-12 V roundoff tolerance at the equality boundary. It requires the correct fault bit at that opening, a nonnegative latency within the requirement, and no later reclosing. A pre-fault opening, missing crossing, wrong reason, or failure to close at startup fails the scenario. This catches an always-open controller and prevents unrelated protections from hiding a broken one.
 
 A default overcurrent crosses at 200 ms, arrives at 210 ms, satisfies its 10 ms hold at 220 ms and opens the actuator at 230 ms: a 30 ms response. The 100 °C/s thermal ramp exceeds 60 °C at 560 ms, reaches its 50 ms hold at 620 ms and opens at 630 ms: a 70 ms response. The thermal ramp saturates at 190 °C to remain inside the synthetic sensor range.
 
@@ -87,7 +87,7 @@ Use `--cells 32` when targeting cell 31. Whole-suite validation happens before a
 
 The pytest parameterization covers every scripted requirement, both current signs, counter wrap, single-channel staleness, malformed data, exact thresholds, timer reset, latched shutdown, nonfinite configuration, report escaping, CLI error exits, and 2/4/16/32-cell runs. Forty fixed seeds vary fault type, magnitude, injection time and target cell. Twenty further fixed seeds vary healthy measurements near limits over 100 updates. Seeds appear in pytest IDs so a failure can be rerun directly.
 
-The checker is itself tested against deliberately disabled, late, wrong-reason and pre-tripped controllers. Passing the controller's own unit tests alone would not prove that the bench can detect these regressions.
+The checker is itself tested against deliberately disabled, early, late, wrong-reason and pre-tripped controllers. High-current cases exercise both sensor rails, and oversized JSON integers must produce a controlled validation error. Passing the controller's own unit tests alone would not prove that the bench can detect these regressions.
 
 ## CI and a future hardware connection
 

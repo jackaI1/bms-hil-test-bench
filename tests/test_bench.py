@@ -176,3 +176,47 @@ def test_reports_use_portable_lf_line_endings(tmp_path):
     write_reports([run_scenario(Scenario("normal", "healthy"))], tmp_path)
     assert b"\r" not in (tmp_path / "results.csv").read_bytes()
     assert b"\r" not in (tmp_path / "trace.csv").read_bytes()
+
+
+@pytest.mark.parametrize("value", [650, 1000, -650, -1000])
+def test_full_supported_overcurrent_range_produces_a_verdict(value):
+    result = run_scenario(Scenario("high current", "overcurrent", value=value))
+    assert result.passed, result.detail
+    assert result.latency_ms == 30
+
+
+def test_cli_high_current_and_huge_json_integer_have_controlled_exits(tmp_path):
+    path = tmp_path / "suite.json"
+    for value, expected_exit in [(1000, 0), (10**400, 2)]:
+        path.write_text(json.dumps([{"name": "current", "kind": "overcurrent", "value": value}]))
+        run = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "bms_hil",
+                "--scenarios",
+                str(path),
+                "--output",
+                str(tmp_path / "output"),
+            ],
+            text=True,
+            capture_output=True,
+        )
+        assert run.returncode == expected_exit, run.stderr
+        assert "Traceback" not in run.stderr
+
+
+@pytest.mark.parametrize(
+    "kind,limits",
+    [
+        ("overvoltage", Limits(voltage_dwell_ms=0)),
+        ("undervoltage", Limits(voltage_dwell_ms=0)),
+        ("overtemperature", Limits(temperature_dwell_ms=0)),
+        ("overcurrent", Limits(current_dwell_ms=0)),
+        ("imbalance", Limits(imbalance_dwell_ms=0)),
+    ],
+)
+def test_independent_oracle_rejects_skipped_hold_times(kind, limits):
+    result = run_scenario(Scenario("early protection", kind), controller=Controller(8, limits))
+    assert not result.passed
+    assert "hold time" in result.detail

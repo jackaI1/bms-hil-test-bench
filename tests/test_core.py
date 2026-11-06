@@ -200,3 +200,26 @@ def test_large_step_thermal_integration_stays_between_initial_and_equilibrium():
     p = Pack([Cell(temperature_c=80)])
     p.step(3600000, 1, True)
     assert 25.005 <= p.cells[0].temperature_c < 80
+
+
+@pytest.mark.parametrize("high,expect_trip", [(3.200, False), (3.201, True)])
+def test_imbalance_at_one_wire_unit_above_and_exact_boundary(high, expect_trip):
+    pack = Pack([Cell(), Cell()])
+    pack.cells[0].voltage_v = high
+    pack.cells[1].voltage_v = 3.050
+    c = Controller(2)
+    for n in range(22):
+        c.tick(n * 10, telemetry_frames(pack, n))
+    assert bool(c.faults & Fault.IMBALANCE) is expect_trip
+    assert c.closed is not expect_trip
+
+
+def test_independent_imbalance_oracle_respects_equality():
+    from bms_hil.requirements import REQUIREMENTS, breached
+
+    pack = Pack([Cell(), Cell()])
+    pack.cells[0].voltage_v = 3.200
+    pack.cells[1].voltage_v = 3.050
+    assert not breached(REQUIREMENTS["IMBALANCE"], pack, False)
+    pack.cells[0].voltage_v = 3.201
+    assert breached(REQUIREMENTS["IMBALANCE"], pack, False)

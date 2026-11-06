@@ -146,6 +146,12 @@ def run_scenario(
             errors.add("contactor opened with the wrong protection reason")
         if latency is not None and not 0 <= latency <= requirement.deadline_ms:
             errors.add(f"response {latency} ms exceeds {requirement.deadline_ms} ms limit")
+        if (
+            latency is not None
+            and requirement.hold_ms
+            and latency < requirement.hold_ms + 2 * STEP_MS
+        ):
+            errors.add("protection skipped its required hold time and message delays")
     return Result(
         scenario.name,
         requirement.id,

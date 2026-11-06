@@ -41,7 +41,7 @@ These are my project's acceptance requirements, not manufacturer safety limits. 
 | BMS-006 | Highest minus lowest cell voltage above 0.15 V | 200 ms | 250 ms | Cell imbalance |
 | BMS-007 | Missing, replayed, or invalid sensor data | 100 ms without fresh data; invalid data trips immediately | 120 ms from first injected bad/missing frame | Cell/current dropout; frozen counter; corrupted frame |
 
-`tests/test_bench.py::test_each_requirement_end_to_end` runs every scripted test in that table. `tests/test_core.py` checks threshold boundaries, continuous hold times, recovery from a brief spike, message validation, and the latched shutdown. The checker rejects a late response, an opening for the wrong reason, a shutdown before the fault, or a fault that never actually reaches its threshold.
+`tests/test_bench.py::test_each_requirement_end_to_end` runs every scripted test in that table. `tests/test_core.py` checks threshold boundaries, continuous hold times, recovery from a brief spike, message validation, and the latched shutdown. The checker rejects a skipped hold time, a late response, an opening for the wrong reason, a shutdown before the fault, or a fault that never actually reaches its threshold.
 
 ## How I put it together
 
@@ -57,4 +57,4 @@ This is a **software HIL-style bench**. HIL, hardware in the loop, normally conn
 
 [Design notes](docs/design.md) cover the equations, message layout, timing, fault injection, and the path to a physical controller. The runtime uses Python's standard library and does not need a network service.
 
-GitHub Actions runs the complete test suite, lint checks, package build, and an installed-wheel scenario run on Python 3.11, 3.12, and 3.13. Each run uploads CSV, HTML, trace, and pytest results. Locally, **124 tests pass**, including 40 seeded fault sweeps and 20 seeded healthy-noise sweeps. The default report has **13 passing scenarios across seven requirements**; the fault-response measurements range from **20 to 220 ms**. These are simulated response times, not computer performance measurements.
+GitHub Actions runs the complete test suite, lint checks, package build, and an installed-wheel scenario run on Python 3.11, 3.12, and 3.13. Each run uploads CSV, HTML, trace, and pytest results. Locally, **137 tests pass**, including 40 seeded fault sweeps and 20 seeded healthy-noise sweeps. The default report has **13 passing scenarios across seven requirements**; the fault-response measurements range from **20 to 220 ms**. These are simulated response times, not computer performance measurements.

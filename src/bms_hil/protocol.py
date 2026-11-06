@@ -22,7 +22,9 @@ def telemetry_frames(pack: Pack, sequence: int) -> list[Frame]:
             CELL_BASE + i,
             struct.pack(
                 "<HhHBx",
-                round(c.voltage_v * 1000),
+                # Model the voltage sensor's rails instead of wrapping or crashing
+                # when an extreme electrical fault drives plant truth out of range.
+                min(6000, max(0, round(c.voltage_v * 1000))),
                 round(c.temperature_c * 100),
                 round(c.soc * 10000),
                 sequence,
