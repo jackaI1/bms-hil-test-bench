@@ -4,6 +4,8 @@ I built a battery fault test bench because I wanted a repeatable way to check wh
 
 I run a simulated sodium-ion battery pack, inject a fault, and measure how long its controller takes to open a contactor, the switch that disconnects the pack. The bench catches high or low cell voltage, overheating, excessive current, uneven cell voltages, and missing sensor messages. It also checks that normal operation and a brief current spike do not cause an unnecessary shutdown.
 
+I also simulate a high-voltage traction circuit, like the part of an electric vehicle that connects the battery to the motor drive. It charges the drive’s capacitor gradually before closing the main switches, and checks the interlock and insulation before and during operation. I can inject faults and see whether the switches respond as intended.
+
 To try it with Python 3.11 or newer:
 
 ```sh
@@ -11,6 +13,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[dev]'
 python -m bms_hil --output reports
+python -m bms_hil.high_voltage
 ```
 
 The last command runs 13 scenarios and prints `13/13 passed`. Open `reports/report.html` in a browser for the results. `reports/results.csv` contains one verdict per scenario, and `reports/trace.csv` records every simulated step. A failed scenario makes the command exit with code 1. I keep a [saved example report](examples/report.html) and its [CSV results](examples/results.csv) in the repository; download the HTML to view it.
@@ -43,6 +46,22 @@ These are my project's acceptance requirements, not manufacturer safety limits. 
 
 `tests/test_bench.py::test_each_requirement_end_to_end` runs every scripted test in that table. `tests/test_core.py` checks threshold boundaries, continuous hold times, recovery from a brief spike, message validation, and the latched shutdown. The checker rejects a skipped hold time, a late response, an opening for the wrong reason, a shutdown before the fault, or a fault that never actually reaches its threshold.
 
+## High-voltage circuit checks
+
+The second command prints six high-voltage checks. A contactor is an electrically controlled high-current switch. The negative contactor closes first, then a smaller precharge contactor connects a resistor to charge the inverter DC-link capacitor, which stores energy at the drive input. When the link reaches 95% of pack voltage, the positive contactor closes and precharge opens. Shutdown commands all three open. The high-voltage interlock loop (HVIL) represents a closed chain through connectors and covers. The isolation monitor checks resistance between the high-voltage circuit and chassis.
+
+These are simulation requirements, not vehicle safety limits. Faults latch until a new sequencer is created. A welded contactor can remain physically closed even though the controller commands it open; the other switches are commanded open, but this does not guarantee isolation.
+
+| Requirement | Acceptance check | Tests |
+| --- | --- | --- |
+| HV-001 | At 400 V, 100 ohms and 1 mF, reach 95% after calculated RC time, then close positive and open precharge; shutdown opens commands | `test_rc_precharge_and_ordered_start_stop`, `test_demo_checks_all_requirements` |
+| HV-002 | An open precharge path must time out at 0.5 s without entering run | `test_faults_latch_and_command_open` |
+| HV-003 | Welded positive or negative feedback while commanded open latches a fault and opens all commands | `test_faults_latch_and_command_open`, `test_weld_on_shutdown_is_detected_from_feedback` |
+| HV-004 | An open interlock prevents startup or trips on the next controller step | `test_faults_latch_and_command_open`, `test_runtime_interlock_trips_and_stays_latched` |
+| HV-005 | Isolation below 200,000 ohms prevents startup or trips on the next controller step | `test_faults_latch_and_command_open`, `test_low_isolation_during_run_trips_immediately` |
+
+The 1 ms simulation uses the exponential capacitor equation. The independent expected time is `-R*C*ln(1 - 0.95)`, about 0.300 seconds. The model assumes ideal feedback, switches and a fixed-voltage source; it has no inverter load, discharge path, contactor delay or physical isolation measurement. A charged link retains voltage after shutdown and cannot restart until discharged externally. This is a software exercise, not a design or validation for actual high-voltage equipment.
+
 ## How I put it together
 
 Each cell has voltage, temperature, current through the series pack, and state of charge, the fraction of charge remaining. My model updates charge from current over time, calculates voltage sag and recovery, and balances electrical heating against cooling. I use an illustrative sodium-ion-style voltage curve that slopes with charge level. I have not measured or fitted a commercial sodium-ion cell.
@@ -57,4 +76,4 @@ This is a **software HIL-style bench**. HIL, hardware in the loop, normally conn
 
 [Design notes](docs/design.md) cover the equations, message layout, timing, fault injection, and the path to a physical controller. The runtime uses Python's standard library and does not need a network service.
 
-GitHub Actions runs the complete test suite, lint checks, package build, and an installed-wheel scenario run on Python 3.11, 3.12, and 3.13. Each run uploads CSV, HTML, trace, and pytest results. Locally, **137 tests pass**, including 40 seeded fault sweeps and 20 seeded healthy-noise sweeps. The default report has **13 passing scenarios across seven requirements**; the fault-response measurements range from **20 to 220 ms**. These are simulated response times, not computer performance measurements.
+GitHub Actions runs the complete test suite, lint checks, package build, and an installed-wheel scenario run on Python 3.11, 3.12, and 3.13. Each run uploads CSV, HTML, trace, and pytest results. Locally, the pytest suite includes the original cell tests and high-voltage tests, including 40 seeded fault sweeps and 20 seeded healthy-noise sweeps. The default report has **13 passing scenarios across seven requirements**; the fault-response measurements range from **20 to 220 ms**. These are simulated response times, not computer performance measurements.
