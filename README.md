@@ -16,7 +16,7 @@ python -m bms_hil --output reports
 python -m bms_hil.high_voltage
 ```
 
-The last command runs 13 scenarios and prints `13/13 passed`. Open `reports/report.html` in a browser for the results. `reports/results.csv` contains one verdict per scenario, and `reports/trace.csv` records every simulated step. A failed scenario makes the command exit with code 1. I keep a [saved example report](examples/report.html) and its [CSV results](examples/results.csv) in the repository; download the HTML to view it.
+The first simulation command runs 13 scenarios and prints `13/13 passed`. Open `reports/report.html` in a browser for the results. `reports/results.csv` contains one verdict per scenario, and `reports/trace.csv` records every simulated step. A failed scenario makes the command exit with code 1. I keep a [saved example report](examples/report.html) and its [CSV results](examples/results.csv) in the repository; download the HTML to view it.
 
 ## What I can change
 
@@ -48,7 +48,7 @@ These are my project's acceptance requirements, not manufacturer safety limits. 
 
 ## High-voltage circuit checks
 
-The second command prints six high-voltage checks. A contactor is an electrically controlled high-current switch. The negative contactor closes first, then a smaller precharge contactor connects a resistor to charge the inverter DC-link capacitor, which stores energy at the drive input. When the link reaches 95% of pack voltage, the positive contactor closes and precharge opens. Shutdown commands all three open. The high-voltage interlock loop (HVIL) represents a closed chain through connectors and covers. The isolation monitor checks resistance between the high-voltage circuit and chassis.
+The high-voltage simulation command prints six high-voltage checks. A contactor is an electrically controlled high-current switch. The negative contactor closes first, then a smaller precharge contactor connects a resistor to charge the inverter DC-link capacitor, which stores energy at the drive input. When the link reaches 95% of pack voltage, the positive contactor closes and precharge opens. Shutdown commands all three open. The high-voltage interlock loop (HVIL) represents a closed chain through connectors and covers. The isolation monitor checks resistance between the high-voltage circuit and chassis.
 
 These are simulation requirements, not vehicle safety limits. Faults latch until a new sequencer is created. A welded contactor can remain physically closed even though the controller commands it open; the other switches are commanded open, but this does not guarantee isolation.
 
