@@ -1,0 +1,14 @@
+scenario,requirement,status,threshold_ms,response_ms,latency_ms,deadline_ms,expected_fault,observed_faults,detail
+normal discharge,BMS-001,PASS,,,,100,0,0,All acceptance checks passed
+brief current spike,BMS-001,PASS,,,,100,0,0,All acceptance checks passed
+cell overvoltage,BMS-002,PASS,200,240,40,50,1,1,All acceptance checks passed
+cell undervoltage,BMS-003,PASS,200,240,40,50,2,2,All acceptance checks passed
+cell overtemperature,BMS-004,PASS,200,270,70,100,4,4,All acceptance checks passed
+thermal runaway ramp,BMS-004,PASS,560,630,70,100,4,4,All acceptance checks passed
+discharge overcurrent,BMS-005,PASS,200,230,30,30,8,8,All acceptance checks passed
+charge overcurrent,BMS-005,PASS,200,230,30,30,8,8,All acceptance checks passed
+cell imbalance,BMS-006,PASS,200,420,220,250,16,16,All acceptance checks passed
+cell sensor dropout,BMS-007,PASS,200,310,110,120,32,32,All acceptance checks passed
+current sensor dropout,BMS-007,PASS,200,310,110,120,32,32,All acceptance checks passed
+frozen cell counter,BMS-007,PASS,200,310,110,120,32,32,All acceptance checks passed
+corrupted cell frame,BMS-007,PASS,200,220,20,120,32,32,All acceptance checks passed

@@ -1,0 +1,5 @@
+[
+  {"name": "Cell 3 heating ramp", "kind": "thermal_ramp", "cell_index": 3, "value": 80},
+  {"name": "Cell 6 sensor lost", "kind": "sensor_dropout", "cell_index": 6},
+  {"name": "Charging fault", "kind": "overcurrent", "value": -65}
+]
