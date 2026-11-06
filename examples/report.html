@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>BMS protection test report</title>
+<style>
+body {font:16px system-ui,sans-serif; margin:2rem; color:#172b3a; background:#fafbfc}
+h1 {font-size:1.6rem} table {border-collapse:collapse; background:white}
+th,td {padding:.65rem; border:1px solid #c9d2db; text-align:left; vertical-align:top}
+th {background:#e9eff4} .scroll {overflow-x:auto} p {max-width:75ch}
+</style>
+<h1>BMS protection test report</h1>
+<p><strong>13/13 passed.</strong> Simulated time; 10 ms loop, 10 ms telemetry
+and 10 ms actuator delays. A PASS requires healthy startup, the expected protection reason,
+a timely contactor opening and no reclosing. No physical hardware was tested.</p>
+<p>Blank timing values mean no crossing or response was observed. Deadlines come from the
+bench specification, independently of the controller configuration. BMS-001's 100 ms limit
+is for startup; its normal operation checks span the entire scenario.</p>
+<div class="scroll"><table><caption>One verdict per scenario and requirement</caption>
+<thead><tr><th scope='col'>scenario</th><th scope='col'>requirement</th><th scope='col'>status</th><th scope='col'>threshold_ms</th><th scope='col'>response_ms</th><th scope='col'>latency_ms</th><th scope='col'>deadline_ms</th><th scope='col'>expected_fault</th><th scope='col'>observed_faults</th><th scope='col'>detail</th></tr></thead><tbody><tr><td>normal discharge</td><td>BMS-001</td><td>PASS</td><td>n/a</td><td>n/a</td><td>n/a</td><td>100</td><td>0</td><td>0</td><td>All acceptance checks passed</td></tr><tr><td>brief current spike</td><td>BMS-001</td><td>PASS</td><td>n/a</td><td>n/a</td><td>n/a</td><td>100</td><td>0</td><td>0</td><td>All acceptance checks passed</td></tr><tr><td>cell overvoltage</td><td>BMS-002</td><td>PASS</td><td>200</td><td>240</td><td>40</td><td>50</td><td>1</td><td>1</td><td>All acceptance checks passed</td></tr><tr><td>cell undervoltage</td><td>BMS-003</td><td>PASS</td><td>200</td><td>240</td><td>40</td><td>50</td><td>2</td><td>2</td><td>All acceptance checks passed</td></tr><tr><td>cell overtemperature</td><td>BMS-004</td><td>PASS</td><td>200</td><td>270</td><td>70</td><td>100</td><td>4</td><td>4</td><td>All acceptance checks passed</td></tr><tr><td>thermal runaway ramp</td><td>BMS-004</td><td>PASS</td><td>560</td><td>630</td><td>70</td><td>100</td><td>4</td><td>4</td><td>All acceptance checks passed</td></tr><tr><td>discharge overcurrent</td><td>BMS-005</td><td>PASS</td><td>200</td><td>230</td><td>30</td><td>30</td><td>8</td><td>8</td><td>All acceptance checks passed</td></tr><tr><td>charge overcurrent</td><td>BMS-005</td><td>PASS</td><td>200</td><td>230</td><td>30</td><td>30</td><td>8</td><td>8</td><td>All acceptance checks passed</td></tr><tr><td>cell imbalance</td><td>BMS-006</td><td>PASS</td><td>200</td><td>420</td><td>220</td><td>250</td><td>16</td><td>16</td><td>All acceptance checks passed</td></tr><tr><td>cell sensor dropout</td><td>BMS-007</td><td>PASS</td><td>200</td><td>310</td><td>110</td><td>120</td><td>32</td><td>32</td><td>All acceptance checks passed</td></tr><tr><td>current sensor dropout</td><td>BMS-007</td><td>PASS</td><td>200</td><td>310</td><td>110</td><td>120</td><td>32</td><td>32</td><td>All acceptance checks passed</td></tr><tr><td>frozen cell counter</td><td>BMS-007</td><td>PASS</td><td>200</td><td>310</td><td>110</td><td>120</td><td>32</td><td>32</td><td>All acceptance checks passed</td></tr><tr><td>corrupted cell frame</td><td>BMS-007</td><td>PASS</td><td>200</td><td>220</td><td>20</td><td>120</td><td>32</td><td>32</td><td>All acceptance checks passed</td></tr></tbody></table></div>
+<p>See <a href="results.csv">results.csv</a> for verdicts and
+<a href="trace.csv">trace.csv</a> for cell ranges, SOC, current, telemetry count and contactor
+state at every step. Fault bits: OV=1, UV=2, OT=4, OC=8, imbalance=16, sensor=32.</p>
+</html>
