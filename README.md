@@ -2,7 +2,7 @@ I merged this into my existing [lifeos-desk-node project](https://github.com/jac
 
 The move keeps the original layout, including `tests/test_bench.py`, `tests/test_high_voltage.py`, `tests/test_core.py`, `src/bms_hil/scenarios.py`. I replaced the README with the report below and left out Git history, installed dependencies, caches and generated build output from the hub copy.
 
-The 3 test source files moved with the code. No project-specific GitHub Actions workflow was retained; the report records the omitted checks, and the test sources can be run locally from the linked folder.
+The 3 files of test code and supporting test helpers moved with the code. No project-specific GitHub Actions workflow was retained; the report records the omitted checks, and the test sources can be run locally from the linked folder.
 
 Omitted workflows: `bms-hil-test-bench-ci.yml`: The relocated workflow did not complete successfully within the migration batch. Local test sources remain available.
 
